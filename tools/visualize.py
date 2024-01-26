@@ -14,14 +14,17 @@ from tqdm import tqdm
 
 def get_color(i):
     return [(i * 23 * j + 43) % 255 for j in range(3)]
-
-with open("/data/Dataset/mot/det_db_oc_sort.json") as f:
+'''
+with open("/data/MOTRv2/data/Dataset/mot/det_db_oc_sort.json") as f:
+    det_db = json.load(f)
+'''
+with open("/data/MOTRv2/data/Dataset/mot/det_db_motrv2.json") as f:
     det_db = json.load(f)
 
 def process(trk_path, img_list, output="output.mp4"):
     h, w, _ = cv2.imread(img_list[0]).shape
     command = [
-        "/usr/bin/ffmpeg",
+        "/data/MOTRv2/output",
         '-y',  # overwrite output file if it exists
         '-f', 'rawvideo',
         '-vcodec','rawvideo',
@@ -56,16 +59,19 @@ def process(trk_path, img_list, output="output.mp4"):
 
 
 if __name__ == '__main__':
-    jobs = os.listdir("exps/motrv2_noqd/run1/tracker/")
+    jobs = os.listdir("../tracker/")
     rank = int(os.environ.get('RLAUNCH_REPLICA', '0'))
     ws = int(os.environ.get('RLAUNCH_REPLICA_TOTAL', '1'))
     jobs = sorted(jobs)[rank::ws]
     for seq in jobs:
         print(seq)
 
-        trk_path = "exps/motrv2_noqd/run1/tracker/" + seq
+        # trk_path = "../tracker/" + seq
+        trk_path = "../tracker/dancetrack0003.txt"
         # trk_path = "/data/Dataset/mot/DanceTrack/val/dancetrack0010/gt/gt.txt"
 
-        img_list = glob(f"/data/Dataset/mot/DanceTrack/val/{seq[:-4]}/img1/*.jpg")
-        process(trk_path, img_list, f'motr_trainval_demo/{seq[:-4]}.mp4')
+        # img_list = glob(f"/data/Dataset/mot/DanceTrack/test/{seq[:-4]}/img1/*.jpg")
+        img_list = glob(f"../data/Dataset/mot/DanceTrack/test/dancetrack0003/img1/*.jpg")
+        # process(trk_path, img_list, f'motr_trainval_demo/{seq[:-4]}.mp4')
+        process(trk_path, img_list, f'motr_trainval_demo/dancetrack0003.mp4')
         break

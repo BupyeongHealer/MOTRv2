@@ -113,7 +113,7 @@ class Detector(object):
         track_instances = None
         with open(os.path.join(self.args.mot_path, self.args.det_db)) as f:
             det_db = json.load(f)
-        loader = DataLoader(ListImgDataset(self.args.mot_path, self.img_list, det_db), 1, num_workers=2)
+        loader = DataLoader(ListImgDataset(self.args.mot_path, self.img_list, det_db), 1, num_workers=1)
         lines = []
         for i, data in enumerate(tqdm(loader)):
             cur_img, ori_img, proposals = [d[0] for d in data]
@@ -186,6 +186,11 @@ if __name__ == '__main__':
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
+    # 모델 초기화 전에 GPU 메모리 상태 확인
+    print("Before model initialization:")
+    print("Allocated memory:", torch.cuda.memory_allocated())
+    print("Cached memory:", torch.cuda.memory_cached())
+
     # load model and weights
     detr, _, _ = build_model(args)
     detr.track_embed.score_thr = args.update_score_threshold
@@ -197,7 +202,10 @@ if __name__ == '__main__':
 
     # '''for MOT17 submit''' 
     sub_dir = 'DanceTrack/test'
+    # parent_dir = './data/Dataset/mot/'
     seq_nums = os.listdir(os.path.join(args.mot_path, sub_dir))
+    # seq_nums = os.listdir(os.path.join(parent_dir, sub_dir))
+
     if 'seqmap' in seq_nums:
         seq_nums.remove('seqmap')
     vids = [os.path.join(sub_dir, seq) for seq in seq_nums]
@@ -209,3 +217,8 @@ if __name__ == '__main__':
     for vid in vids:
         det = Detector(args, model=detr, vid=vid)
         det.detect(args.score_threshold)
+
+    # 모델 사용 후에 GPU 메모리 상태 확인
+    print("After model usage:")
+    print("Allocated memory:", torch.cuda.memory_allocated())
+    print("Cached memory:", torch.cuda.memory_cached())
